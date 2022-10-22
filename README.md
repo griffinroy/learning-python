@@ -1,0 +1,2 @@
+## Task
+The purpose of this repository is to organize my progress in learning the Python language. While this repository may contain small, "lab"-like projects, it will not contain any projects taken on independent of the books/tutorials I am following; those will be structured in their own repositories.
