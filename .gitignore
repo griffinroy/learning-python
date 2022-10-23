@@ -1,0 +1,4 @@
+# .gitignore
+
+# ignore python bytecode files
+__pycache__/
