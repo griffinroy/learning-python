@@ -2,6 +2,11 @@
 
 This section tracks notes from [The Official Python Tutorial](https://docs.python.org/3.8/tutorial/index.html).
 
+## References
+* [The Python 3.8.x Documentation](https://docs.python.org/3.8/): Top-level reference
+* [The Python 3.8.x Standard Library](https://docs.python.org/3.8/library/index.html): Usage of standard library
+* [The Python 3.8.x Language Reference](https://docs.python.org/3.8/reference/index.html): Syntax and core semantics (exact)
+
 # 2. Using the Python Interpreter
 
 ## 2.1 Invoking the Interpreter
@@ -313,3 +318,135 @@ Most Python projects adhere to the [PEP8](https://peps.python.org/pep-0008/) sty
 * Use `UpperCamelCase` naming for classes, and `lowercase_with_underscores` naming for functions and methods. Always use `self` as the name for the first method argument (RE: classes)
 * Don't use non-default encodings
 * Don't use non-ASCII characters in identifiers
+
+# 5. Data Structures
+
+## 5.1 More on `list`s
+As a mutable sequence type, `list`s have a number of built-in methods. Information on those methods can be found [here](https://docs.python.org/3.8/library/stdtypes.html#sequence-types-list-tuple-range). In particular:
+* `list.append(x)` adds a new item `x` to the end of a list.
+* `list.insert(i, x)` adds a new item `x` before the `i`th item of the list.
+* `list.pop([i])` removes the `i`th item from a list (the bracketed `i` indicates that it is an optional parameter). By default, the last item is removed.
+
+### 5.1.1 `list`s as Stacks
+Because of the average O(1) efficiency of `list.append(x)` and `list.pop()` (like `std::vector`s in C++), the `list` data type lends itself naturally toward use as a stack ("last-in, first-out"). To add an item to the "stack", use `list.append(x)`. To retrieve an item from the stack, use `list.pop()`.
+
+### 5.1.2 `list`s as Queues
+`list`s can also provide the functionality of a queue ("first-in, first-out") via the `list.insert(0, x)` (for adding items) and `list.pop()` (for retrieving items). 
+
+Since `list`s are implemented like dynamically-sized arrays, it inefficient to insert/remove elements from the beginning. Instead, it is recommended to use a `collections.deque`.
+
+### 5.1.3 List Comprehensions
+List Comprehensions offer a shorthand for creating lists where each item is the result of an operation on (the entirety or a subset of) another list or table. Each of the following results in the same list:
+```
+>>> # via for loop (like C++)
+>>> squares = []
+>>> for x in range(10):
+...     squares.append(x ** 2)
+...
+>>> # via lambda function
+>>> squares = list(map(lambda x: x ** 2, range(10)))
+>>> # via list comprehension (like vectorization in MATLAB)
+>>> squares = [x ** 2 for x in range(10)]
+```
+
+List comprehensions can combine `for` statements and `if` statements. The ordering of those statements follows the equivalent ordering in the traditional `for` loop implementation. If the resulting list element is a tuple, it must be parenthesized:
+```
+>>> # create a list of all combinations of x and y that don't match
+>>> pairs = []
+>>> for x in [1, 2, 3]:
+...     for y in [3, 1, 4]:
+...         if x != y:
+...             pairs.append((x, y))
+...
+>>> pairs = [(x, y) for x in [1, 2, 3] for y in [3, 1, 4] if x != y]
+```
+
+### 5.1.4 Nested List Comprehensions
+The "operation" portion of the list comprehension can be any expression (a function, a nested function, etc.), including a list comprehension. This usage is called a Nested List Comprehension. The following code transposes a matrix:
+```
+>>> matrix = [
+...     [1, 2, 3, 4],
+...     [5, 6, 7, 8],
+...     [9, 10, 11, 12]
+... ]
+>>> matrix_ = []
+>>> for col in range(4):
+...     row_ = []
+...     for row in matrix:
+...         row_.append(row[col])
+...     matrix_.append(row_)
+...
+>>> matrix_ = [[row[col] for row in matrix] for col in range(4)]
+>>> matrix_ = list(zip(*matrix))    # list comprehensions are not always best!
+```
+
+## 5.2 The `del` Statement
+The `del` statement removes a slice of a `list` without retrieving it (whereas `list.pop()` removes a single index and retrieves it). `del` can dereference a variable (any subsequent references to that name result in an error until it is redefined).
+
+## 5.3 `tuple`s and Sequences
+The `list`, `range`, and `string` data types are all considered to be sequence types, meaning they share common methods (like slicing, indexing, etc.). Another sequence type is the `tuple`, which is like an immutable list. Instead of square brackets, tuples are declared with comma-separated items within parentheses:
+```
+>>> t_empty = ()        # empty tuple
+>>> t_one = 'asdf',     # tuple of size 1
+>>> t_gtone = 'a', 1    # tuple of size >1 (via tuple packing)
+>>> t_gtone = ('a', 1)  # tuple of size >1 (alternate syntax)
+```
+
+Although tuples themselves are immutable, any mutable elements can be modified:
+```
+>>> t = ([1, 2, 3], 'asdf')
+>>> t[0].append(4)
+>>> t
+([1, 2, 3, 4], 'asdf')
+```
+
+Just as tuples/other sequence data types can be packed, they can be unpacked into separate variables. Multiple assignment is a combination of tuple packing and sequence unpacking, under the hood:
+```
+>>> t = (1, 'hello', [1, 2, 3])     # tuple/sequence packing
+>>> a, b, c = t                     # sequence unpacking (works with lists, as well!)
+```
+
+## 5.4 `set`s
+A `set` is an unordered collection with _no_ duplicate elements. `set`s support mathematical set operations like union, difference, etc. Like `list`s, `set` comprehensions are supported. They are mutable and iterable, and can be declared like so:
+```
+>>> s_empty = set()
+>>> s_nempty = {'asdf', 1, [1, 2, 3]}
+```
+
+## 5.5 `dictionary`s
+A `dictionary` is a sequence of name-value pairs. Instead of being indexed by a number, a `dictionary` is indexed by a key, which is any immutable object (including tuples of immutable objects).
+
+You can store a value under a key, and you can retrieve a value with a key. Storing a value under a key that already exists in the `dictionary` causes the previous value to be lost. Retrieving the value associated with a key that is not in the `dictionary` causes an error. You can check if a key is in the `dictionary` with the `in` keyword:
+```
+>>> d = {}              # create an empty dictionary
+>>> hogwarts = {
+...     'Potter': 'Gryffindor',
+...     'Malfoy': 'Slytherin',
+...     'Diggory': 'Hufflepuff'}
+>>> hogwarts['Lovegood'] = 'Ravenclaw'
+>>> del hogwarts['Diggory']
+>>> list(hogwarts)                  # keys in order of insertion
+['Potter', 'Malfoy', 'Lovegood']
+>>> sorted(hogwarts)                # keys in sorted order
+['Lovegood', 'Malfoy', 'Potter']
+```
+
+## 5.6 Looping Techniques
+You can loop over a `dictionary`. To retrieve the key and value at the same time:
+```
+>>> knights = {'gallahad': 'the pure', 'robin': 'the brave'}
+>>> for knight, title in knights.items():
+...     print(knight, title)
+...
+```
+
+There are many other niche ways to loop (backwards, over multiple iterables, etc.). Look these up as you need them.
+
+## 5.7 More on Conditions
+Use the `in` and `not in` operators to check if an item is in or not in a sequence, respectively. Use the `is` and `is not` operators to check whether two objects reference the same data. Instead of `&&`, `||`, and `!`, use `and`, `or`, and `not`. `and` and `or` are short-circuit operators.
+
+Unlike C/C++, it is impossible to accidentally assign data within an expression with the `=` operator; instead, use the special walrus operator (this is my favorite thing about Python so far)  `:=` to assign data within an expression.
+
+## 5.8 Comparing Sequences and Other Types
+Sequence comparison uses _lexicographical_ ordering (short-circuit, element-wise comparison). Think `string` comparison.
+
